@@ -49,7 +49,16 @@ $python main.py path -f textfile.txt
 
 The textfile must be in the current working directory
 
-## Example Output
+## Output
+The following image shows an example output from the tool:
 ![](https://github.com/markroche92/Map-Header-Files/blob/master/images/exampleOutput.PNG)
+
+In this example, only 2 source files have been analysed. 
+* The blue box contains the set of source files. Each source file is represented by a double-circle node. Each other node represents a header file. 
+* The arrows connecting nodes represents inclusions. If an arrow points from A to B, this means that A includes B. 
+* Each arrow is labeled, declaring the line in file A which corresponds to the #include statement, which includes file B.
+* Colours are generated at random for each run. However, the logic is:
+    * Files which make up part of multiple translation units are all allocated a common colour (in this case green) 
+    * Files which are only associated with a single translation unit are allocated a unique colour corresponding to this translation unit (in this case orange for one translation unit, blue for another)
 
 *image generated using [GraphViz](https://pypi.org/project/graphviz/) python library*
