@@ -12,7 +12,7 @@ In a large project, there can be hundreds of source and header files. For a numb
 
 The tool which is stored in this repository helps the user do exactly this. With the help of the [GraphViz](https://pypi.org/project/graphviz/) python library, a visual representation of the network of file inclusion is generated. 
 
-## Using the Tool
+## Setup
 ### Prerequisites
 Python 3.5+ is required to use the GraphViz library. To install, use pip:
 ```
@@ -26,9 +26,9 @@ The tool is currently configured such that:
 
 When running the tool, the user is expected to provide the relative path to the parent directory
 
-### Running the Tool
+## Running the Tool
 The user has the option to analyse all source files, or a specified subset. These can be specified manually over command-line, or within a text file - it is the user's choice.
-#### Specify Source Files Manually
+### Specify Source Files Manually
 To specify source files manually, run as follows:
 ```
 $python main.py path -m file1.c file2.c ... fileN.c
@@ -38,7 +38,7 @@ $python main.py path -m file1.c file2.c ... fileN.c
 * `fileX.c` is a sourcefile name
 
 
-#### Specify Source Files in Text File
+### Specify Source Files in Text File
 To specify source files in a text file, run as follows:
 ```
 $python main.py path -f textfile.txt
