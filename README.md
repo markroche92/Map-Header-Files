@@ -50,4 +50,5 @@ $python main.py path -f textfile.txt
 The textfile must be in the current working directory
 
 ## Example Output
-[](images/exampleOutput.png)
+![](images/exampleOutput.png)
+*image generated using [GraphViz](https://pypi.org/project/graphviz/) python library*
