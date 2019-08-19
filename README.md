@@ -51,4 +51,5 @@ The textfile must be in the current working directory
 
 ## Example Output
 ![](https://github.com/markroche92/Map-Header-Files/blob/master/images/exampleOutput.PNG)
+
 *image generated using [GraphViz](https://pypi.org/project/graphviz/) python library*
