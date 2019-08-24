@@ -23,8 +23,7 @@ def findDirectIncludes(searchString):
 		matchString = match.group(0)
 		lineNumber = searchString.count('\n', 0, match.start())
 
-		if not re.search(r'[.]h\s*[>""]', matchString):
-			 return Exception(exceptionBase.format(matchString))
+		if not re.search(r'[.]h\s*[>""]', matchString): raise Exception(exceptionBase.format(matchString))
 		
 		inQuotes = re.search(r'["<][\sa-zA-Z0-9_]+.h', matchString).group(0)
 		headerName = re.search(r'[a-zA-Z0-9_]+.h', inQuotes).group(0)
@@ -36,7 +35,7 @@ def findDirectIncludes(searchString):
 # Read the content of a text file and pass to findDirectIncludes function
 def findIncludesFromFilename(filename):
 
-	with open(sys.argv[1] + filename, 'r') as file:
+	with open(filename, 'r') as file:
 		return findDirectIncludes(file.read())
 
 # Function takes a filename and a base mapping between filenames and included headers
@@ -49,7 +48,7 @@ def searchTranslationUnit(filename, previousMappings):
 
 	while(mapping.keys() > filesSearched):
 		# Get includes for a single file. Update list of keys, for new headers found
-		mapping[filename] = findIncludesFromFilename(filename)
+		mapping[filename] = findIncludesFromFilename(sys.argv[1] + filename)
 		# New keys are those found in file which have not yet been searched for this Translation Unit
 		newKeys = {tup[0] for tup in mapping[filename] if tup[0] not in mapping.keys()}
 
