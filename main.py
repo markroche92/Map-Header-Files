@@ -1,6 +1,7 @@
 import re
 import getopt
 import sys
+import os
 from visualise import *
 
 exceptionBase = 'Found inclusion of file not ending in .h: \nExample: {}';
@@ -41,14 +42,16 @@ def findIncludesFromFilename(filename):
 # Function takes a filename and a base mapping between filenames and included headers
 # The base mapping contains information for previously analysed files
 # When identifying new files to search, previously searched files are ignored
-def searchTranslationUnit(filename, previousMappings):
+def searchTranslationUnit(path, filename, previousMappings):
+
 
 	mapping = {filename : None}
 	filesSearched = set()
 
 	while(mapping.keys() > filesSearched):
 		# Get includes for a single file. Update list of keys, for new headers found
-		mapping[filename] = findIncludesFromFilename(sys.argv[1] + filename)
+		mapping[filename] = findIncludesFromFilename(sys.argv[1] + ("source/" if ".c" == filename[-2:] else "includes/") + filename)
+
 		# New keys are those found in file which have not yet been searched for this Translation Unit
 		newKeys = {tup[0] for tup in mapping[filename] if tup[0] not in mapping.keys()}
 
@@ -84,14 +87,28 @@ def searchTranslationUnit(filename, previousMappings):
 	return mapping
 
 
-def main(sourceFileNames = sys.argv[2:]):
+def main():
 
 	sourceDictsList = []
 
+	if sys.argv[2] == "-m":
+		sourceFileNames = sys.argv[3:]
+	elif sys.argv[2] == "-f":
+		textFileName = sys.argv[3]
+		with open(textFileName, 'r') as file:
+			sourceFileNames = file.read().split("\n")
+			# Remove empty lines read in from .txt file. Set also removes duplicate filenames
+			sourceFileNames = set(filter(lambda val: val != "", sourceFileNames))
+	else:
+		raise Exception("Command line argument \"{}\" not recognised".format(sys.argv[2]))
+
 	for filename in sourceFileNames:
+		if filename[-2:] != ".c" and filename[-2:] != ".h": raise Exception("Attempting to analyse file with unrecognised extension: {}".format(filename))
 		# Second argument to searchTranslationUnit is a dictionary of all file : match entries found so far
-		sourceDictsList.append(searchTranslationUnit(filename, dict(collections.ChainMap(*sourceDictsList))))
+		sourceDictsList.append(searchTranslationUnit(sys.argv[1], filename, dict(collections.ChainMap(*sourceDictsList))))
 
 	visualise(sourceDictsList, sourceFileNames)
+
+	return sourceDictsList
 
 main()
