@@ -42,7 +42,7 @@ def findIncludesFromFilename(filename):
 # Function takes a filename and a base mapping between filenames and included headers
 # The base mapping contains information for previously analysed files
 # When identifying new files to search, previously searched files are ignored
-def searchTranslationUnit(path, filename, previousMappings):
+def searchTranslationUnit(abPaths, filename, previousMappings):
 
 
 	mapping = {filename : None}
@@ -50,7 +50,8 @@ def searchTranslationUnit(path, filename, previousMappings):
 
 	while(mapping.keys() > filesSearched):
 		# Get includes for a single file. Update list of keys, for new headers found
-		mapping[filename] = findIncludesFromFilename(sys.argv[1] + ("source/" if ".c" == filename[-2:] else "includes/") + filename)
+		mapping[filename] = findIncludesFromFilename(os.path.join(abPaths["source"], filename) if ".c" == filename[-2:] 
+			                                                 else os.path.join(abPaths["includes"], filename))
 
 		# New keys are those found in file which have not yet been searched for this Translation Unit
 		newKeys = {tup[0] for tup in mapping[filename] if tup[0] not in mapping.keys()}
@@ -86,29 +87,64 @@ def searchTranslationUnit(path, filename, previousMappings):
 
 	return mapping
 
+# Check whether the specified subdirectory exists, and that in contains a 'source' and 'includes' directory. If not, raise exception.
+# Acceptable input from user for directory command line argument are of the form:
+# ===============================================================================
+# .                      : current directory - this means that 'includes' and 'source' should be immediate subdirectories
+# ./directory/directory2 : directory of interest is downstream of current directory. 
+# ./../../directory      : directory of interest is a parent of current working directory. 
+def getAbsolutePaths(relativePath):
+
+	if not relativePath or relativePath[0] != '.': 
+		raise Exception("{} is not a valid relative path, as it does not begin with \'.\'".format(relativePath))
+
+	if len(relativePath) == 1:
+		absolutePaths = {'base' : os.getcwd()}
+	elif relativePath[0:2] == "..":
+		absolutePaths = {'base' : os.path.join(os.getcwd(), relativePath)}
+	else:
+		absolutePaths = {'base' : os.path.join(os.getcwd(), relativePath[2:])}
+
+
+	for directory in ('','source', 'includes'):
+		if directory: absolutePaths[directory] = os.path.join(absolutePaths['base'], directory)
+		path = os.path.join(absolutePaths['base'], directory)
+		if not os.path.isdir(path): raise Exception("{} is not a valid directory".format(path))
+
+	return absolutePaths
+
+
 
 def main():
 
-	sourceDictsList = []
+	# Check number of command line arguments
+	if len(sys.argv) < 4: raise Exception("Insufficient number of command-line arguments provided")
 
+	# Check validity of path
+	absolutePaths = getAbsolutePaths(sys.argv[1])
+
+	# Check validity of command to run function
 	if sys.argv[2] == "-m":
 		sourceFileNames = sys.argv[3:]
 	elif sys.argv[2] == "-f":
-		textFileName = sys.argv[3]
-		with open(textFileName, 'r') as file:
-			sourceFileNames = file.read().split("\n")
+		with open(sys.argv[3], 'r') as textFile:
+			sourceFileNames = textFile.read().split("\n")
 			# Remove empty lines read in from .txt file. Set also removes duplicate filenames
 			sourceFileNames = set(filter(lambda val: val != "", sourceFileNames))
 	else:
 		raise Exception("Command line argument \"{}\" not recognised".format(sys.argv[2]))
 
+	sourceDictsList = []
+
 	for filename in sourceFileNames:
+		# Check file extension is either .c or .h
 		if filename[-2:] != ".c" and filename[-2:] != ".h": raise Exception("Attempting to analyse file with unrecognised extension: {}".format(filename))
 		# Second argument to searchTranslationUnit is a dictionary of all file : match entries found so far
-		sourceDictsList.append(searchTranslationUnit(sys.argv[1], filename, dict(collections.ChainMap(*sourceDictsList))))
+		sourceDictsList.append(searchTranslationUnit(absolutePaths, filename, dict(collections.ChainMap(*sourceDictsList))))
 
 	visualise(sourceDictsList, sourceFileNames)
 
 	return sourceDictsList
 
-main()
+if __name__ == "__main__":
+	main()
