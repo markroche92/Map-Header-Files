@@ -62,3 +62,13 @@ In this example, only 2 source files have been analysed.
     * Files which are only associated with a single translation unit are allocated a unique colour corresponding to this translation unit (in this case orange for one translation unit, blue for another)
 
 *image generated using [GraphViz](https://pypi.org/project/graphviz/) python library*
+
+To generate this output run the following from command line:
+```
+$python main.py /testFiles/ -f input.txt
+```
+or 
+```
+$python main.py /testFiles/ -m example.c example2.c
+```
+
