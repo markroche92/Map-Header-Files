@@ -85,6 +85,8 @@ class TestClass(unittest.TestCase):
 		if "includeMap.pdf" in os.listdir(): os.remove("includeMap.pdf")
 
 		sys.argv = ["main.py", "./testFiles/", "-m", "example.c"]
+
+
 		self.assertEqual(main(), [{'example.c': {('firstHeader.h', 2, 2, 30),
                 								 ('secondHeader.h', 3, 31, 65),
                 								 ('thirdHeader.h', 4, 66, 95)},
@@ -119,17 +121,8 @@ class TestClass(unittest.TestCase):
 		if "includeMap.pdf" in os.listdir(): os.remove("includeMap.pdf")
 
 		sys.argv = ["main.py", "./testFiles/", "-f", "./testFiles/input_two_files.txt"]
-		self.assertEqual(main(), [{'example2.c': {('secondHeader.h', 2, 2, 36),
-								                  ('seventhHeader.h', 3, 37, 68),
-								                  ('sixthHeader.h', 4, 69, 98)},
-								   'fifthHeader.h': set(),
-								   'fourthHeader.h': {('fifthHeader.h', 4, 4, 28)},
-								   'secondHeader.h': {('fourthHeader.h', 2, 11, 36)},
-								   'seventhHeader.h': {('thirdHeader.h', 4, 4, 28)},
-								   'sixthHeader.h': set(),
-								   'thirdHeader.h': {('fourthHeader.h', 7, 67, 92),
-								                     ('sixthHeader.h', 3, 16, 40)}},
-								  {'example.c': {('firstHeader.h', 2, 2, 30),
+
+		self.assertEqual(main(), [{'example.c': {('firstHeader.h', 2, 2, 30),
                     							 ('secondHeader.h', 3, 31, 65),
                     							 ('thirdHeader.h', 4, 66, 95)},
 							       'fifthHeader.h': set(),
@@ -138,7 +131,17 @@ class TestClass(unittest.TestCase):
 							       'secondHeader.h': {('fourthHeader.h', 2, 11, 36)},
 							       'sixthHeader.h': set(),
 							       'thirdHeader.h': {('fourthHeader.h', 7, 67, 92),
-							                         ('sixthHeader.h', 3, 16, 40)}}])
+							                         ('sixthHeader.h', 3, 16, 40)}},
+								  {'example2.c': {('secondHeader.h', 2, 2, 36),
+								                  ('seventhHeader.h', 3, 37, 68),
+								                  ('sixthHeader.h', 4, 69, 98)},
+								   'fifthHeader.h': set(),
+								   'fourthHeader.h': {('fifthHeader.h', 4, 4, 28)},
+								   'secondHeader.h': {('fourthHeader.h', 2, 11, 36)},
+								   'seventhHeader.h': {('thirdHeader.h', 4, 4, 28)},
+								   'sixthHeader.h': set(),
+								   'thirdHeader.h': {('fourthHeader.h', 7, 67, 92),
+								                     ('sixthHeader.h', 3, 16, 40)}}])
 
 		# Check includeMap.pdf is generated
 		self.assertTrue("includeMap.pdf" in os.listdir())
@@ -180,11 +183,52 @@ class TestClass(unittest.TestCase):
 			main()
 		self.assertEqual("Insufficient number of command-line arguments provided", str(ex6.exception))
 
+	def test_getCheckedChildren(self):
+
+		""" getCheckedChildren() """
+
+		# Find previously checked children for a single file
+		self.assertEqual(getCheckedChildren({'a.c'}, {'a.c' : {('b.h', 4, 5, 6),
+			                                                   ('c.h', 1, 2, 3)},
+			                                          'b.h' : set(),
+			                                          'c.h' : set()}), {'a.c', 'b.h', 'c.h'})
+
+		# Find previously checked children for two files. Test two files including same header
+		self.assertEqual(getCheckedChildren({'a.c', 'd.c'}, {'a.c' : {('b.h', 4, 5, 6),
+			                                                          ('c.h', 1, 2, 3)},
+			                                                 'b.h' : set(),
+			                                                 'c.h' : set(), 
+			                                                 'd.c' : {('c.h', 7, 8, 9),
+			                                                          ('e.h', 10, 11, 12)},
+			                                                 'e.h' : set()}), {'a.c', 'd.c', 'b.h', 'c.h', 'e.h'})
+
+		# Testing two layers of included files
+		self.assertEqual(getCheckedChildren({'a.c'},        {'a.c' : {('b.h', 4, 5, 6),
+			                                                          ('d.c', 1, 2, 3)},
+			                                                 'b.h' : set(),
+			                                                 'c.h' : set(), 
+			                                                 'd.c' : {('c.h', 7, 8, 9),
+			                                                          ('e.h', 10, 11, 12)},
+			                                                 'e.h' : set()}), {'a.c', 'd.c', 'b.h', 'c.h', 'e.h'})
+
+		# Testing two files which include each other
+		self.assertEqual(getCheckedChildren({'a.c', 'b.h'}, {'a.c' : {('b.h', 4, 5, 6)},
+			                                                 'b.h' : {('a.c', 4, 5, 6)}}), {'a.c', 'b.h'})
+
+		# First argument is incorrect type
+		with self.assertRaises(Exception) as ex1:
+			getCheckedChildren(5, dict())
+		self.assertEqual('First argument of getCheckedChildren() should be a set()', str(ex1.exception))
+
+		# Second argument is incorrect type
+		with self.assertRaises(Exception) as ex2:
+			getCheckedChildren(set(), 1)
+		self.assertEqual('Second argument of getCheckedChildren() should be a dictionary of sets of tuples', str(ex2.exception))
 
 
-
-
-
+	#def test_searchTranslationUnit(self):
+	#
+	#	""" searchTranslationUnit() """
 
 
 

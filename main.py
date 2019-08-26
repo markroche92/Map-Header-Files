@@ -39,6 +39,23 @@ def findIncludesFromFilename(filename):
 	with open(filename, 'r') as file:
 		return findDirectIncludes(file.read())
 
+def getCheckedChildren(newKeysPrevMapped, previousMappings):
+
+	assert type(newKeysPrevMapped) is set, 'First argument of getCheckedChildren() should be a set()'
+	assert type(previousMappings) is dict, 'Second argument of getCheckedChildren() should be a dictionary of sets of tuples'
+
+	checkedChildren = set()
+	# Get children - these are known to be previously searched for other TU
+	while(newKeysPrevMapped > checkedChildren):
+		# Get names of files includes within files which are known to have been checked for another TU
+		childNewKeys = {tup[0] for name in newKeysPrevMapped - checkedChildren for tup in previousMappings[name]}
+		# Add to set of checked child keys
+		checkedChildren |= newKeysPrevMapped - checkedChildren
+		# Add to set of keys known to be mapped during previous search
+		newKeysPrevMapped |= childNewKeys
+
+	return newKeysPrevMapped
+
 # Function takes a filename and a base mapping between filenames and included headers
 # The base mapping contains information for previously analysed files
 # When identifying new files to search, previously searched files are ignored
@@ -59,19 +76,11 @@ def searchTranslationUnit(abPaths, filename, previousMappings):
 		# Find which new keys have been previously mapped within another Translation Unit
 		newKeysPrevMapped = newKeys.intersection(set(previousMappings))
 
-		checkedChildren = set()
-		# Get children - these are known to be previously searched for other TU
-		while(newKeysPrevMapped > checkedChildren):
-			# Get names of files includes within files which are known to have been checked for another TU
-			childNewKeys = {tup[0] for name in newKeysPrevMapped - checkedChildren for tup in previousMappings[name]}
-			# Add to set of checked child keys
-			checkedChildren |= newKeysPrevMapped - checkedChildren
-			# Add to set of keys known to be mapped during previous search
-			newKeysPrevMapped |= childNewKeys
-
+		getCheckedChildren(newKeysPrevMapped, previousMappings)
 
 		# Merge results from search of previous Translation Units
 		mapping.update({**{key: previousMappings[key] for key in newKeysPrevMapped}})
+
 		# Add these keys to searched file list
 		filesSearched |= newKeysPrevMapped
 
@@ -80,7 +89,6 @@ def searchTranslationUnit(abPaths, filename, previousMappings):
 
 		# Mark file as searched. Pick a new filename to search
 		filesSearched.add(filename)
-
 
 		unsearched = mapping.keys() - filesSearched
 		if unsearched: filename = list(unsearched)[0]
@@ -130,7 +138,8 @@ def main():
 		with open(sys.argv[3], 'r') as textFile:
 			sourceFileNames = textFile.read().split("\n")
 			# Remove empty lines read in from .txt file. Set also removes duplicate filenames
-			sourceFileNames = set(filter(lambda val: val != "", sourceFileNames))
+			sourceFileNames = list(filter(lambda val: val != "", sourceFileNames))
+			sourceFileNames.sort()
 	else:
 		raise Exception("Command line argument \"{}\" not recognised".format(sys.argv[2]))
 
