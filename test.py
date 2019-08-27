@@ -226,10 +226,64 @@ class TestClass(unittest.TestCase):
 		self.assertEqual('Second argument of getCheckedChildren() should be a dictionary of sets of tuples', str(ex2.exception))
 
 
-	#def test_searchTranslationUnit(self):
-	#
-	#	""" searchTranslationUnit() """
+	def test_searchTranslationUnit(self):
+	
+		""" searchTranslationUnit() """
 
+		# Test for a searching a file which has already been searched
+		expectedOutput_T1 = {'example.c': {('firstHeader.h', 2, 2, 30),
+        							    ('secondHeader.h', 3, 31, 65),
+        							    ('thirdHeader.h', 4, 66, 95)},
+				          'fifthHeader.h': set(),
+				          'firstHeader.h': {('secondHeader.h', 3, 17, 42)},
+				          'fourthHeader.h': {('fifthHeader.h', 4, 4, 28)},
+				          'secondHeader.h': {('fourthHeader.h', 2, 11, 36)},
+				          'sixthHeader.h': set(),
+				          'thirdHeader.h': {('fourthHeader.h', 7, 67, 92),
+				                            ('sixthHeader.h', 3, 16, 40)}}
+
+		self.assertEqual(searchTranslationUnit( {'source' :   os.path.join(os.getcwd(), 'testFiles/source'),
+		                                         'includes' : os.path.join(os.getcwd(), 'testFiles/includes')}, 
+		                                         'example.c', expectedOutput_T1), expectedOutput_T1) 
+
+
+		# Test for a searching new file, which has common includes as previous searched file
+		expectedOutput_T2 = {'example2.c': {('secondHeader.h', 2, 2, 36),
+						                  ('seventhHeader.h', 3, 37, 68),
+						                  ('sixthHeader.h', 4, 69, 98)},
+						   'fifthHeader.h': set(),
+						   'fourthHeader.h': {('fifthHeader.h', 4, 4, 28)},
+						   'secondHeader.h': {('fourthHeader.h', 2, 11, 36)},
+						   'seventhHeader.h': {('thirdHeader.h', 4, 4, 28)},
+						   'sixthHeader.h': set(),
+						   'thirdHeader.h': {('fourthHeader.h', 7, 67, 92),
+						                     ('sixthHeader.h', 3, 16, 40)}}
+
+		self.assertEqual(searchTranslationUnit( {'source' :   os.path.join(os.getcwd(), 'testFiles/source'),
+		                                         'includes' : os.path.join(os.getcwd(), 'testFiles/includes')}, 
+		                                         'example2.c', expectedOutput_T1), expectedOutput_T2) 
+
+
+		# Test for a searching new file, which has common includes as previous searched file
+		self.assertEqual(searchTranslationUnit( {'source' :   os.path.join(os.getcwd(), 'testFiles/source'),
+		                                         'includes' : os.path.join(os.getcwd(), 'testFiles/includes')}, 
+		                                         'example.c', expectedOutput_T2), expectedOutput_T1) 
+
+
+		# First argument is incorrect type
+		with self.assertRaises(Exception) as ex1:
+			searchTranslationUnit(1, '', dict())
+		self.assertEqual('First argument of searchTranslationUnit() should be a dictionary', str(ex1.exception))
+
+		# Second argument is incorrect type
+		with self.assertRaises(Exception) as ex2:
+			searchTranslationUnit(dict(), 1, dict())
+		self.assertEqual('Second argument of searchTranslationUnit() should be a string', str(ex2.exception))
+
+		# Third argument is incorrect type
+		with self.assertRaises(Exception) as ex3:
+			searchTranslationUnit(dict(), '', 1)
+		self.assertEqual('Third argument of searchTranslationUnit() should be a dictionary', str(ex3.exception))
 
 
 

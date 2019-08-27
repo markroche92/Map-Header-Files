@@ -61,6 +61,10 @@ def getCheckedChildren(newKeysPrevMapped, previousMappings):
 # When identifying new files to search, previously searched files are ignored
 def searchTranslationUnit(abPaths, filename, previousMappings):
 
+	assert type(abPaths) is dict, 'First argument of searchTranslationUnit() should be a dictionary'
+	assert type(filename) is str, 'Second argument of searchTranslationUnit() should be a string'
+	assert type(previousMappings) is dict, 'Third argument of searchTranslationUnit() should be a dictionary'
+
 
 	mapping = {filename : None}
 	filesSearched = set()
