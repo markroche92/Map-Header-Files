@@ -26,7 +26,7 @@ The tool is currently configured such that:
 
 When running the tool, the user is expected to provide the relative path to the parent directory
 
-## Running the Tool
+## Using the Tool
 The user has the option to analyse all source files, or a specified subset. These can be specified manually over command-line, or within a text file - it is the user's choice.
 ### Specify Source Files Manually
 To specify source files manually, run as follows:
@@ -71,4 +71,29 @@ or
 ```
 $python main.py /testFiles/ -m example.c example2.c
 ```
+## Testing
 
+Test cases have been written for each of the python functions that have been written. 
+
+Functions under test are distributed between `main.py` and `visualise.py`. Test suites are written within `test.py`.
+
+The `unittest` library is used to for running the test suite. Test suite and test cases are handled by methods of the class `TestClass`.
+
+The mapping between functions and test suites is given below:
+
+| Function | Test Suite |
+| ------ | ------ |
+| main | | TestClass/test_main | 
+| findDirectIncludes | TestClass/test_findDirectIncludes |
+| findIncludesFromFilename | TestClass/test_findIncludesFromFilename |
+| getCheckedChildren | TestClass/test_getCheckedChildren |
+| searchTranslationUnit | TestClass/test_searchTranslationUnit |
+| getAbsolutePaths | TestClass/test_getAbsolutePaths |
+| visualise | TestClass/test_visualise |
+
+
+To run all test cases:
+
+```
+$python test.py
+```
