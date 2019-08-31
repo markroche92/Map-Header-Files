@@ -83,7 +83,7 @@ The mapping between functions and test suites is given below:
 
 | Function | Test Suite |
 | ------ | ------ |
-| main | | TestClass/test_main | 
+| main | TestClass/test_main |
 | findDirectIncludes | TestClass/test_findDirectIncludes |
 | findIncludesFromFilename | TestClass/test_findIncludesFromFilename |
 | getCheckedChildren | TestClass/test_getCheckedChildren |
