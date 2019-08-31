@@ -1,6 +1,7 @@
 from main import *
 import unittest
 from test_vectors import *
+from visualise import *
 import argparse
 
 
@@ -10,6 +11,96 @@ class TestClass(unittest.TestCase):
 
 	def setUp(self):
 		print("\n\tRunning test suite for {}".format(self.shortDescription()), end = "")
+
+	def test_visualise(self):
+
+		""" visualise() """
+
+		sourceDictsList = [{'example.c': {('firstHeader.h', 2, 2, 30),
+		        							 ('secondHeader.h', 3, 31, 65),
+		        							 ('thirdHeader.h', 4, 66, 95)},
+						       'fifthHeader.h': set(),
+						       'firstHeader.h': {('secondHeader.h', 3, 17, 42)},
+						       'fourthHeader.h': {('fifthHeader.h', 4, 4, 28)},
+						       'secondHeader.h': {('fourthHeader.h', 2, 11, 36)},
+						       'sixthHeader.h': set(),
+						       'thirdHeader.h': {('fourthHeader.h', 7, 67, 92),
+						                         ('sixthHeader.h', 3, 16, 40)}},
+							  {'example2.c': {('secondHeader.h', 2, 2, 36),
+							                  ('seventhHeader.h', 3, 37, 68),
+							                  ('sixthHeader.h', 4, 69, 98)},
+							   'fifthHeader.h': set(),
+							   'fourthHeader.h': {('fifthHeader.h', 4, 4, 28)},
+							   'secondHeader.h': {('fourthHeader.h', 2, 11, 36)},
+							   'seventhHeader.h': {('thirdHeader.h', 4, 4, 28)},
+							   'sixthHeader.h': set(),
+							   'thirdHeader.h': {('fourthHeader.h', 7, 67, 92),
+							                     ('sixthHeader.h', 3, 16, 40)}}]
+
+		sourceFileNames = ['example.c', 'example2.c']
+
+		# Note: use regex here, as graph.source can print the structure of the graph in many ways
+		# Test is successful if all of below patterns are found in graph.source, and no further patterns are present either
+		# This means that the intended graph is fully expressed, and no unexpected information is captured
+
+		patterns = [# Subgraph Cluster - single pattern split onto many lines
+                    r"(\tnode \[style=filled\]\n"
+                    r"\tsubgraph cluster_0 \{\n"
+                    r"\t\tnode \[shape=doublecircle\]\n"
+                    r"\t\t(?:\"example.c\"\n\t\t\"example2.c\"|\"example2.c\"\n\t\t\"example.c\")\n\t\}\n" # Non-capturing group
+                    r"\tnode \[shape=circle\]\n)",
+
+		            # Includes between different files
+		            r"\t\"firstHeader.h\" -> \"secondHeader.h\" \[label=\"Line: 3\"\]\n",
+					r"\t\"thirdHeader.h\" -> \"fourthHeader.h\" \[label=\"Line: 7\"\]\n",
+					r"\t\"thirdHeader.h\" -> \"sixthHeader.h\" \[label=\"Line: 3\"\]\n",
+					r"\t\"secondHeader.h\" -> \"fourthHeader.h\" \[label=\"Line: 2\"\]\n",
+					r"\t\"example.c\" -> \"firstHeader.h\" \[label=\"Line: 2\"\]\n",
+					r"\t\"example.c\" -> \"thirdHeader.h\" \[label=\"Line: 4\"\]\n",
+					r"\t\"example.c\" -> \"secondHeader.h\" \[label=\"Line: 3\"\]\n",
+					r"\t\"fourthHeader.h\" -> \"fifthHeader.h\" \[label=\"Line: 4\"\]\n",
+ 					r"\t\"example2.c\" -> \"seventhHeader.h\" \[label=\"Line: 3\"\]\n",
+        			r"\t\"example2.c\" -> \"secondHeader.h\" \[label=\"Line: 2\"\]\n",
+        		    r"\t\"example2.c\" -> \"sixthHeader.h\" \[label=\"Line: 4\"\]\n",
+        			r"\t\"seventhHeader.h\" -> \"thirdHeader.h\" \[label=\"Line: 4\"\]\n", 
+
+        			# Nodes in the graph - Note, colour is expressed in 6 characters.
+					r"\t\"firstHeader.h\" \[color=\"\#[0-9A-Z]{6}\"\]\n",
+					r"\t\"thirdHeader.h\" \[color=\"\#[0-9A-Z]{6}\"\]\n",
+					r"\t\"secondHeader.h\" \[color=\"\#[0-9A-Z]{6}\"\]\n",
+					r"\t\"example.c\" \[color=\"\#[0-9A-Z]{6}\"\]\n",
+					r"\t\"fourthHeader.h\" \[color=\"\#[0-9A-Z]{6}\"\]\n",
+					r"\t\"sixthHeader.h\" \[color=\"\#[0-9A-Z]{6}\"\]\n",
+					r"\t\"fifthHeader.h\" \[color=\"\#[0-9A-Z]{6}\"\]\n",
+					r"\t\"seventhHeader.h\" \[color=\"\#[0-9A-Z]{6}\"\]\n",
+					r"\t\"example2.c\" \[color=\"\#[0-9A-Z]{6}\"\]\n"]
+
+
+		# Finding include map for example.c and example2.c as specified in input_two_files.txt
+		if "includeMap.pdf" in os.listdir(): os.remove("includeMap.pdf")
+
+		result = visualise(sourceDictsList, sourceFileNames)
+		strResult = str(result.source)
+
+		for p in patterns:
+			# Check for matches against each specified pattern
+			matches = re.findall(p, strResult)
+			# Check that the pattern is matched only once
+			self.assertEqual(len(matches), 1)
+			# Remove the match from the string which we are parsing
+			strResult = strResult.replace(matches[0], '')
+
+		# Check that the after matching all above patterns, the remaining string is the frame of the Digraph object
+		self.assertEqual(strResult, "digraph G {\n}")
+
+		# Check that the function returns a Digraph object
+		self.assertEqual(type(result), Digraph)
+
+		# Check includeMap.pdf is generated
+		self.assertTrue("includeMap.pdf" in os.listdir())
+
+		
+
 
 	# Tests for the function findDirectIncludes()
 	def test_findDirectIncludes(self):

@@ -37,3 +37,5 @@ def visualise(sourceDictsList, sourceFileNames):
 			graph.edge(k, s[0], label = "Line: {}".format(s[1]))
 
 	graph.render()
+
+	return graph
